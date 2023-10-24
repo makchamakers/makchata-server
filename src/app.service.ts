@@ -96,6 +96,7 @@ export class AppService {
           payment: pathType?.info?.payment,
           firstStartStation: pathType?.info?.firstStartStation,
           lastEndStation: pathType?.info?.lastEndStation,
+          quickExit: pathType?.info?.door,
         };
       } else if (pathType.pathType === 2) {
         type = {
@@ -118,7 +119,7 @@ export class AppService {
       }
       return type;
     });
-
-    return route;
+    console.log(data);
+    return data;
   }
 }
