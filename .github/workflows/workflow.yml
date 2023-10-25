@@ -1,0 +1,31 @@
+name: CI/CD for Nest.js
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.18.0
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build application
+        run: npm run build
+
+    # - name: Deploy to AWS EC2
+    #   run: |
+    #     ssh-keyscan -H your-ec2-hostname >> $HOME/.ssh/known_hosts
+    #     scp -r ./dist ec2-user@your-ec2-hostname:/path/to/your/app
+    #     ssh ec2-user@your-ec2-hostname 'pm2 restart your-app-name'

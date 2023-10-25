@@ -1,33 +1,38 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Query } from '@nestjs/common';
 import { AppService } from './app.service';
+import { ApiTags } from '@nestjs/swagger';
+import { GetApi } from './common/decorator/api.decorator';
+import { CurrentLocationRequest } from './dto/request/current.request';
+import CurrentLocationResponse from './dto/response/current.response';
+import { SearchRequest } from './dto/request/search.response';
+import SearchResponse from './dto/response/search.response';
+import RouteRequest from './dto/request/route.request';
 
+@ApiTags('경로 데이터 가져오기')
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get('/')
+  @GetApi(() => [CurrentLocationResponse], {
+    path: '/',
+  })
   getHello(
-    @Query('latitude') latitude: string,
-    @Query('longitude') longitude: string,
-  ): Promise<any> {
-    return this.appService.getCurrentDirection(latitude, longitude);
+    @Query('') currentLocation: CurrentLocationRequest,
+  ): Promise<CurrentLocationResponse> {
+    return this.appService.getCurrentDirection(currentLocation);
   }
 
-  @Get('/search')
-  post(
-    @Query('search') search: string,
-    @Query('departure') departure: string,
-  ): Promise<any> {
-    return this.appService.getCurrentLocation(search, departure);
+  @GetApi(() => [SearchResponse], {
+    path: '/search',
+  })
+  post(@Query('') request: SearchRequest): Promise<SearchResponse> {
+    return this.appService.getCurrentLocation(request);
   }
 
-  @Get('/destination')
-  getDestination(
-    @Query('sx') sx: string,
-    @Query('sy') sy: string,
-    @Query('ex') ex: string,
-    @Query('ey') ey: string,
-  ): Promise<any> {
-    return this.appService.getDestination(sx, sy, ex, ey);
+  @GetApi(() => [], {
+    path: '/destination',
+  })
+  getRoutes(@Query('') request: RouteRequest): Promise<any> {
+    return this.appService.getDestination(request);
   }
 }
