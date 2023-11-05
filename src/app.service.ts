@@ -12,8 +12,9 @@ export class AppService {
     request: CurrentLocationRequest,
   ): Promise<CurrentLocationResponse> {
     try {
+      console.log(request, 'request');
       const res = await fetch(
-        `https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?coords=${request.longitude},${request.longitude}&output=json&orders=addr,admcode`,
+        `https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?coords=${request.longitude},${request.latitude}&output=json&orders=addr,admcode`,
         {
           mode: 'cors',
           headers: new Headers({
@@ -25,6 +26,7 @@ export class AppService {
         },
       );
       const currentLocation = await res.json();
+      console.log(currentLocation);
       const mergeCurrentLocation = `${currentLocation?.results[0]?.region.area1.name} ${currentLocation?.results[0]?.region.area2.name} ${currentLocation?.results[0]?.region.area3.name} ${currentLocation?.results[0]?.region.area4.name}${currentLocation?.results[0]?.land.number1}-${currentLocation?.results[0]?.land.number2}`;
       const data = await fetch(
         `https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${mergeCurrentLocation}`,
