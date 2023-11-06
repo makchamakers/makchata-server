@@ -53,8 +53,9 @@ export class AppService {
   }
 
   async getCurrentLocation(request: SearchRequest): Promise<any> {
+    console.log(request);
     const res = await fetch(
-      `https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${request.search}&coordinate=${request.search}`,
+      `https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${request.search}&coordinate=${request.departure}`,
       {
         mode: 'cors',
         headers: new Headers({

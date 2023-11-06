@@ -15,5 +15,5 @@ export class SearchRequest {
     nullable: true,
     example: '127.14091823,34.1938091',
   })
-  range: string;
+  departure: string;
 }
