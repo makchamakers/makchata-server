@@ -4,6 +4,8 @@ import { CurrentLocationRequest } from './dto/request/current.request';
 import CurrentLocationResponse from './dto/response/current.response';
 import { SearchRequest } from './dto/request/search.response';
 import RouteRequest from './dto/request/route.request';
+import { LastTrainRequest } from './dto/request/lastTrain.request';
+import * as xml2js from 'xml2js';
 
 @Injectable()
 export class AppService {
@@ -126,5 +128,20 @@ export class AppService {
 
     console.log(route);
     return data;
+  }
+
+  async getLastTrain(request: LastTrainRequest) {
+    console.log(request);
+    const res = await fetch(
+      `http://openAPI.seoul.go.kr:8088/${this.configService.get<string>(
+        'OPEN_API_LAST_TRAIN',
+      )}/xml/SearchSTNTimeTableByFRCodeService/1/5/352/1/1/`,
+    );
+
+    const xmlData = await res.text();
+    const parser = new xml2js.Parser({ explicitArray: false });
+    const parsedData = await parser.parseStringPromise(xmlData);
+    console.log(parsedData);
+    return parsedData?.row;
   }
 }
