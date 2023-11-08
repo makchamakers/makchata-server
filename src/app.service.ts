@@ -55,28 +55,31 @@ export class AppService {
   }
 
   async getCurrentLocation(request: SearchRequest): Promise<any> {
-    console.log(request);
+    const encodedQuery = encodeURIComponent(request.search);
+
     const res = await fetch(
-      `https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${request.search}&coordinate=${request.departure}`,
+      `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodedQuery}`,
       {
-        mode: 'cors',
-        headers: new Headers({
-          'X-NCP-APIGW-API-KEY-ID': this.configService.get<string>('CLIENT_ID'),
-          'X-NCP-APIGW-API-KEY':
-            this.configService.get<string>('CLIENT_SECRET'),
-        }),
+        headers: {
+          Authorization: `KakaoAK ${this.configService.get<string>(
+            'KAKAO_REST_API_KEY',
+          )}`,
+        },
       },
     );
 
-    const data = await res.json();
-
-    return data?.addresses.length === 0
-      ? []
-      : {
-          roadAddress: data?.addresses[0].roadAddress,
-          x: data?.addresses[0].x,
-          y: data?.addresses[0].y,
-        };
+    if (res.ok) {
+      const data = await res.json();
+      return data.documents.map((item) => ({
+        address_name: item.address_name,
+        place_name: item.place_name,
+        phone: item.phone,
+        x: item.x,
+        y: item.y,
+      }));
+    } else {
+      throw new Error(`Kakao API request failed with status ${res.status}`);
+    }
   }
 
   async getDestination(request: RouteRequest) {
@@ -130,6 +133,12 @@ export class AppService {
     return data;
   }
 
+  /**
+   *
+   * result 안에 넣어야함.
+   *
+   */
+
   async getLastTrain(request: LastTrainRequest) {
     console.log(request);
     const res = await fetch(
@@ -144,6 +153,6 @@ export class AppService {
     const parser = new xml2js.Parser({ explicitArray: false });
     const parsedData = await parser.parseStringPromise(xmlData);
     console.log(parsedData.SearchSTNTimeTableByFRCodeService.row);
-    return parsedData;
+    return parsedData.SearchSTNTimeTableByFRCodeService.row;
   }
 }
