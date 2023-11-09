@@ -5,7 +5,7 @@ import CurrentLocationResponse from './dto/response/current.response';
 import { SearchRequest } from './dto/request/search.response';
 import RouteRequest from './dto/request/route.request';
 import { LastTrainRequest } from './dto/request/lastTrain.request';
-import * as xml2js from 'xml2js';
+import { subwayUtil } from './utils/subway.util';
 
 @Injectable()
 export class AppService {
@@ -92,7 +92,7 @@ export class AppService {
     );
 
     const data = await destination.json();
-    // traffic type 1지하철 2버스 3도보
+    // traffic type 1지하철 2버스 3버스 + 지하철
 
     console.log(data);
     const route = data?.result?.path?.map((pathType) => {
@@ -140,19 +140,29 @@ export class AppService {
    */
 
   async getLastTrain(request: LastTrainRequest) {
+    // const res = await fetch(
+    //   `http://openapi.seoul.go.kr:8088/${this.configService.get<string>(
+    //     'OPEN_API_LAST_TRAIN',
+    //   )}/json/SearchSTNBySubwayLineInfo/1/5//${request.station_name}`,
+    // );
     console.log(request);
     const res = await fetch(
-      `http://openAPI.seoul.go.kr:8088/${this.configService.get<string>(
+      `http://openapi.seoul.go.kr:8088/${this.configService.get<string>(
         'OPEN_API_LAST_TRAIN',
-      )}/xml/SearchSTNTimeTableByFRCodeService/1/5/${
-        request.station_code
-      }/1/1/`,
+      )}/json/SearchFirstAndLastTrainbyLineServiceNew/1/5/${
+        request.line_num
+      }/1/1/ /${request.station_code}/`,
     );
 
-    const xmlData = await res.text();
-    const parser = new xml2js.Parser({ explicitArray: false });
-    const parsedData = await parser.parseStringPromise(xmlData);
-    console.log(parsedData.SearchSTNTimeTableByFRCodeService.row);
-    return parsedData.SearchSTNTimeTableByFRCodeService.row;
+    const data = await res.json();
+    const { checkDay } = subwayUtil(1);
+    await checkDay(
+      1,
+      2,
+      this.configService.get<string>('OPEN_API_HOLIDAY'),
+    ).then((res) => console.log(res, 'holiday'));
+
+    console.log(data);
+    return data;
   }
 }
