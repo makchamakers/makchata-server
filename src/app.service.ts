@@ -4,8 +4,8 @@ import { CurrentLocationRequest } from './dto/request/current.request';
 import CurrentLocationResponse from './dto/response/current.response';
 import { SearchRequest } from './dto/request/search.response';
 import RouteRequest from './dto/request/route.request';
-import { LastTrainRequest } from './dto/request/lastTrain.request';
 import { subwayUtil } from './utils/subway.util';
+import { LastTrainRequest } from './dto/request/lastTrain.request';
 
 @Injectable()
 export class AppService {
@@ -92,45 +92,59 @@ export class AppService {
     );
 
     const data = await destination.json();
+
+    //pathType에 대한 경우의 수를 return 한다.
     // traffic type 1지하철 2버스 3버스 + 지하철
 
-    console.log(data);
-    const route = data?.result?.path?.map((pathType) => {
-      let type;
-      if (pathType.pathType === 1) {
-        type = {
-          type: '지하철',
-          totalTime: pathType?.info?.totalTime,
-          totalDistance: pathType?.info?.totalDistance,
-          payment: pathType?.info?.payment,
-          firstStartStation: pathType?.info?.firstStartStation,
-          lastEndStation: pathType?.info?.lastEndStation,
-          quickExit: pathType?.info?.door,
-        };
-      } else if (pathType.pathType === 2) {
-        type = {
-          type: '버스',
-          totalTime: pathType?.info?.totalTime,
-          totalDistance: pathType?.info?.totalDistance,
-          payment: pathType?.info?.payment,
-          firstStartStation: pathType?.info?.firstStartStation,
-          lastEndStation: pathType?.info?.lastEndStation,
-        };
-      } else if (pathType.pathType === 3) {
-        type = {
-          type: '버스+지하철',
-          totalTime: pathType?.info?.totalTime,
-          totalDistance: pathType?.info?.totalDistance,
-          payment: pathType?.info?.payment,
-          firstStartStation: pathType?.info?.firstStartStation,
-          lastEndStation: pathType?.info?.lastEndStation,
-        };
-      }
-      return type;
-    });
+    if (data.result.path.length !== 0) {
+      const routes = data?.result.path.map(async (path) => {
+        if (path.pathType === 1 || path.pathType === 3) {
+          // await this.getLastTrain({
+          //   line_num: path.subPath[1].lane[0].subwayCode,
+          //   station_code: path.subPath[1].path.startID,
+          // });
+          console.log(path?.subPath[1]?.lane[0]?.subwayCode);
+        }
+      });
+      console.log(routes, '경우의수');
+    }
+    //await this.getLastTrain();
 
-    console.log(route);
-    return data;
+    // const route = data?.result?.path?.map((pathType) => {
+    //   let type;
+    //   if (pathType.pathType === 1) {
+    //     type = {
+    //       type: '지하철',
+    //       totalTime: pathType?.info?.totalTime,
+    //       totalDistance: pathType?.info?.totalDistance,
+    //       payment: pathType?.info?.payment,
+    //       firstStartStation: pathType?.info?.firstStartStation,
+    //       lastEndStation: pathType?.info?.lastEndStation,
+    //       quickExit: pathType?.info?.door,
+    //     };
+    //   } else if (pathType.pathType === 2) {
+    //     type = {
+    //       type: '버스',
+    //       totalTime: pathType?.info?.totalTime,
+    //       totalDistance: pathType?.info?.totalDistance,
+    //       payment: pathType?.info?.payment,
+    //       firstStartStation: pathType?.info?.firstStartStation,
+    //       lastEndStation: pathType?.info?.lastEndStation,
+    //     };
+    //   } else if (pathType.pathType === 3) {
+    //     type = {
+    //       type: '버스+지하철',
+    //       totalTime: pathType?.info?.totalTime,
+    //       totalDistance: pathType?.info?.totalDistance,
+    //       payment: pathType?.info?.payment,
+    //       firstStartStation: pathType?.info?.firstStartStation,
+    //       lastEndStation: pathType?.info?.lastEndStation,
+    //     };
+    //   }
+    //   return type;
+    // });
+
+    return data?.result?.path;
   }
 
   /**
@@ -140,29 +154,24 @@ export class AppService {
    */
 
   async getLastTrain(request: LastTrainRequest) {
-    // const res = await fetch(
-    //   `http://openapi.seoul.go.kr:8088/${this.configService.get<string>(
-    //     'OPEN_API_LAST_TRAIN',
-    //   )}/json/SearchSTNBySubwayLineInfo/1/5//${request.station_name}`,
-    // );
-    console.log(request);
+    const { checkDay } = subwayUtil();
+    //평일 1 토요일 2 공휴일/일요일 3
+    let weekTag;
+    await checkDay(this.configService.get<string>('OPEN_API_HOLIDAY')).then(
+      (res) => (weekTag = res),
+    );
+    console.log(weekTag, 'cc');
+
     const res = await fetch(
       `http://openapi.seoul.go.kr:8088/${this.configService.get<string>(
         'OPEN_API_LAST_TRAIN',
       )}/json/SearchFirstAndLastTrainbyLineServiceNew/1/5/${
         request.line_num
-      }/1/1/ /${request.station_code}/`,
+      }/1/${weekTag}/ /${request.station_code}/`,
     );
 
     const data = await res.json();
-    const { checkDay } = subwayUtil(1);
-    await checkDay(
-      1,
-      2,
-      this.configService.get<string>('OPEN_API_HOLIDAY'),
-    ).then((res) => console.log(res, 'holiday'));
 
-    console.log(data);
     return data;
   }
 }
