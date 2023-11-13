@@ -1,4 +1,4 @@
-import { Controller, Query } from '@nestjs/common';
+import { Controller, Param, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ApiTags } from '@nestjs/swagger';
 import { GetApi } from './common/decorator/api.decorator';
@@ -35,6 +35,16 @@ export class AppController {
   })
   getRoutes(@Query('') request: RouteRequest): Promise<any> {
     return this.appService.getDestination(request);
+  }
+
+  @GetApi(() => [], {
+    path: '/destination/:index',
+  })
+  getRouteDetail(
+    @Query('') request: RouteRequest,
+    @Param('index') index: number,
+  ): Promise<any> {
+    return this.appService.getMapPathCoord(request, index);
   }
 
   @GetApi(() => [], {

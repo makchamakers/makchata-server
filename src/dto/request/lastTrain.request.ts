@@ -16,4 +16,12 @@ export class LastTrainRequest {
     example: '1-9 호선',
   })
   line_num: number;
+
+  @ApiField({
+    type: Number,
+    description: '지하철 상, 하행',
+    nullable: true,
+    example: '1-상행 2-하행',
+  })
+  way_code: number;
 }

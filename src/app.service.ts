@@ -96,62 +96,142 @@ export class AppService {
     //pathType에 대한 경우의 수를 return 한다.
     // traffic type 1지하철 2버스 3버스 + 지하철
 
-    if (data.result.path.length !== 0) {
-      const routes = data?.result.path.map(async (path) => {
-        if (path.pathType === 1 || path.pathType === 3) {
-          // await this.getLastTrain({
-          //   line_num: path.subPath[1].lane[0].subwayCode,
-          //   station_code: path.subPath[1].path.startID,
-          // });
-          console.log(path?.subPath[1]?.lane[0]?.subwayCode);
-        }
-      });
-      console.log(routes, '경우의수');
-    }
+    //제공하는 바가 뭔지 다시 한 번 볼 것. x,y좌표에 대한 배열
+    //  if (data.result.path.length !== 0) {
+    //    const routes = data?.result.path.map(async (path) => {
+    //      if (path.pathType === 1 || path.pathType === 3) {
+    //        path.subPath.map((route) => {
+    //          return
+    //        })
+    //      }
+    //    });
+    //  }
+
     //await this.getLastTrain();
 
-    // const route = data?.result?.path?.map((pathType) => {
-    //   let type;
-    //   if (pathType.pathType === 1) {
-    //     type = {
-    //       type: '지하철',
-    //       totalTime: pathType?.info?.totalTime,
-    //       totalDistance: pathType?.info?.totalDistance,
-    //       payment: pathType?.info?.payment,
-    //       firstStartStation: pathType?.info?.firstStartStation,
-    //       lastEndStation: pathType?.info?.lastEndStation,
-    //       quickExit: pathType?.info?.door,
-    //     };
-    //   } else if (pathType.pathType === 2) {
-    //     type = {
-    //       type: '버스',
-    //       totalTime: pathType?.info?.totalTime,
-    //       totalDistance: pathType?.info?.totalDistance,
-    //       payment: pathType?.info?.payment,
-    //       firstStartStation: pathType?.info?.firstStartStation,
-    //       lastEndStation: pathType?.info?.lastEndStation,
-    //     };
-    //   } else if (pathType.pathType === 3) {
-    //     type = {
-    //       type: '버스+지하철',
-    //       totalTime: pathType?.info?.totalTime,
-    //       totalDistance: pathType?.info?.totalDistance,
-    //       payment: pathType?.info?.payment,
-    //       firstStartStation: pathType?.info?.firstStartStation,
-    //       lastEndStation: pathType?.info?.lastEndStation,
-    //     };
-    //   }
-    //   return type;
-    // });
-
-    return data?.result?.path;
+    const route = data?.result?.path?.map((pathType) => {
+      if (pathType.pathType === 1) {
+        return {
+          type: '지하철',
+          totalTime: pathType?.info?.totalTime,
+          totalDistance: pathType?.info?.totalDistance,
+          payment: pathType?.info?.payment,
+          firstStartStation: pathType?.info?.firstStartStation,
+          lastEndStation: pathType?.info?.lastEndStation,
+          quickExit: pathType?.info?.door,
+          subPath: pathType?.subPath.map((path) => {
+            if (path.trafficType === 1 || path.trafficType === 2) {
+              return {
+                trafficType: path.trafficType === 1 ? '지하철' : '버스',
+                distance: path.distance,
+                startName: path.startName,
+                endName: path.endName,
+              };
+            } else {
+              return {
+                trafficType: '도보',
+                distance: path.distance,
+              };
+            }
+          }),
+        };
+      } else if (pathType.pathType === 2) {
+        return {
+          type: '버스',
+          totalTime: pathType?.info?.totalTime,
+          totalDistance: pathType?.info?.totalDistance,
+          payment: pathType?.info?.payment,
+          firstStartStation: pathType?.info?.firstStartStation,
+          lastEndStation: pathType?.info?.lastEndStation,
+          subPath: pathType?.subPath.map((path) => {
+            if (path.trafficType === 1 || path.trafficType === 2) {
+              return {
+                trafficType: path.trafficType === 1 ? '지하철' : '버스',
+                distance: path.distance,
+                startName: path.startName,
+                endName: path.endName,
+              };
+            } else {
+              return {
+                trafficType: '도보',
+                distance: path.distance,
+              };
+            }
+          }),
+        };
+      } else if (pathType.pathType === 3) {
+        return {
+          type: '버스+지하철',
+          totalTime: pathType?.info?.totalTime,
+          totalDistance: pathType?.info?.totalDistance,
+          payment: pathType?.info?.payment,
+          firstStartStation: pathType?.info?.firstStartStation,
+          lastEndStation: pathType?.info?.lastEndStation,
+          subPath: pathType?.subPath.map((path) => {
+            if (path.trafficType === 1 || path.trafficType === 2) {
+              return {
+                trafficType: path.trafficType === 1 ? '지하철' : '버스',
+                distance: path.distance,
+                startName: path.startName,
+                endName: path.endName,
+              };
+            } else {
+              return {
+                trafficType: '도보',
+                distance: path.distance,
+              };
+            }
+          }),
+        };
+      }
+    });
+    return route;
   }
 
   /**
    *
-   * result 안에 넣어야함.
-   *
+   * 한 path에 대한 x,y 좌표를 주면 된다. 배열로
    */
+  async getMapPathCoord(request: RouteRequest, index: number) {
+    const destination = await fetch(
+      `https://api.odsay.com/v1/api/searchPubTransPathT?SX=${request.sx}&SY=${
+        request.sy
+      }&EX=${request.ex}&EY=${request.ey}&OPT=1&apiKey=${encodeURIComponent(
+        this.configService.get<string>('ODSAY_KEY'),
+      )}`,
+    );
+
+    const data = await destination.json();
+
+    const newData = data.result.path[index].subPath.map((path) => {
+      //obj 원소 안에 traffic type = 1-지하철 , 2-버스 , 3-도보 걸음 x,y 좌표 어떻게 표현해볼까
+      //도보의 x,y 좌표를 어떻게 구해야할까? odsay를 찾아볼까
+      //다음 인덱스로 넘어갈 때
+
+      if (path.trafficType === 1 || path.trafficType === 2) {
+        return {
+          trafficType: path.trafficType === 1 ? '지하철' : '버스',
+          distance: path.distance,
+          coords: path.passStopList.stations.map((coords) => {
+            return {
+              x: coords.x,
+              y: coords.y,
+            };
+          }),
+          startName: path.startName,
+          endName: path.endName,
+        };
+      } else {
+        return {
+          trafficType: '도보',
+          distance: path.distance,
+        };
+      }
+    });
+
+    console.log(newData);
+    return newData;
+  }
 
   async getLastTrain(request: LastTrainRequest) {
     const { checkDay } = subwayUtil();
@@ -165,13 +245,25 @@ export class AppService {
     const res = await fetch(
       `http://openapi.seoul.go.kr:8088/${this.configService.get<string>(
         'OPEN_API_LAST_TRAIN',
-      )}/json/SearchFirstAndLastTrainbyLineServiceNew/1/5/${
-        request.line_num
-      }/1/${weekTag}/ /${request.station_code}/`,
+      )}/json/SearchFirstAndLastTrainbyLineServiceNew/1/5/${request.line_num}/${
+        request.way_code
+      }/${weekTag}/ /${request.station_code}/`,
     );
 
     const data = await res.json();
 
     return data;
+  }
+
+  private async getLastBus(busNum: number) {
+    const res = await fetch(
+      `https://api.odsay.com/v1/api/searchBusLane?lang=0&busNo=${busNum}&apiKey=${encodeURIComponent(
+        this.configService.get<string>('ODSAY_KEY'),
+      )}`,
+    );
+
+    const data = await res.json();
+    console.log(data.result.lane[0].busLastTime, '버스막차1');
+    return data.result.lane.busLastTime;
   }
 }
