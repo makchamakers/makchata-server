@@ -13,7 +13,7 @@ export class LastTrainRequest {
     type: Number,
     description: '지하철 호선 번호',
     nullable: true,
-    example: '1-9 호선',
+    example: '5',
   })
   line_num: number;
 

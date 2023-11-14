@@ -92,7 +92,6 @@ export class AppService {
     );
 
     const data = await destination.json();
-
     //pathType에 대한 경우의 수를 return 한다.
     // traffic type 1지하철 2버스 3버스 + 지하철
 
@@ -108,8 +107,9 @@ export class AppService {
     //  }
 
     //await this.getLastTrain();
-
-    const route = data?.result?.path?.map((pathType) => {
+    console.log(data.result.path);
+    //마지막 교통수단의 시간을 구하면 된다.
+    const route = data?.result?.path?.map(async (pathType) => {
       if (pathType.pathType === 1) {
         return {
           type: '지하철',
@@ -119,6 +119,11 @@ export class AppService {
           firstStartStation: pathType?.info?.firstStartStation,
           lastEndStation: pathType?.info?.lastEndStation,
           quickExit: pathType?.info?.door,
+          lastTime: await this.getLastTrain({
+            station_code: pathType?.startId,
+            line_num: pathType.lane[0].path,
+            way_code: pathType?.wayCode,
+          }),
           subPath: pathType?.subPath.map((path) => {
             if (path.trafficType === 1 || path.trafficType === 2) {
               return {
@@ -143,6 +148,7 @@ export class AppService {
           payment: pathType?.info?.payment,
           firstStartStation: pathType?.info?.firstStartStation,
           lastEndStation: pathType?.info?.lastEndStation,
+          lastTime: await this.getLastBus(759),
           subPath: pathType?.subPath.map((path) => {
             if (path.trafficType === 1 || path.trafficType === 2) {
               return {
@@ -185,7 +191,8 @@ export class AppService {
         };
       }
     });
-    return route;
+
+    return data.result.path;
   }
 
   /**
@@ -204,22 +211,23 @@ export class AppService {
     const data = await destination.json();
 
     const newData = data.result.path[index].subPath.map((path) => {
-      //obj 원소 안에 traffic type = 1-지하철 , 2-버스 , 3-도보 걸음 x,y 좌표 어떻게 표현해볼까
-      //도보의 x,y 좌표를 어떻게 구해야할까? odsay를 찾아볼까
-      //다음 인덱스로 넘어갈 때
-
+      console.log(path, 'lnannd');
       if (path.trafficType === 1 || path.trafficType === 2) {
         return {
           trafficType: path.trafficType === 1 ? '지하철' : '버스',
           distance: path.distance,
+          startName: path?.startName,
+          endName: path?.endName,
+          sectionTime: path?.sectionTime,
+          door: path?.door,
+          stationCount: path?.stationCount,
+          lane: path?.lane,
           coords: path.passStopList.stations.map((coords) => {
             return {
               x: coords.x,
               y: coords.y,
             };
           }),
-          startName: path.startName,
-          endName: path.endName,
         };
       } else {
         return {
@@ -229,7 +237,6 @@ export class AppService {
       }
     });
 
-    console.log(newData);
     return newData;
   }
 
