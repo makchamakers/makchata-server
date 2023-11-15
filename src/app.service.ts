@@ -91,30 +91,21 @@ export class AppService {
     );
 
     const data = await destination.json();
-    //pathType에 대한 경우의 수를 return 한다.
-    // traffic type 1지하철 2버스 3버스 + 지하철
 
-    //제공하는 바가 뭔지 다시 한 번 볼 것. x,y좌표에 대한 배열
-    //  if (data.result.path.length !== 0) {
-    //    const routes = data?.result.path.map(async (path) => {
-    //      if (path.pathType === 1 || path.pathType === 3) {
-    //        path.subPath.map((route) => {
-    //          return
-    //        })
-    //      }
-    //    });
-    //  }
+    const route = await Promise.all(
+      data?.result?.path?.map(async (pathType) => {
+        if (pathType.pathType === 1) {
+          const subPath = [];
 
-    //await this.getLastTrain();
-
-    //마지막 교통수단의 시간을 구하면 된다.
-    const route = data?.result?.path?.map(async (pathType) => {
-      if (pathType.pathType === 1) {
-        const subPath = await Promise.all(
-          (pathType?.subPath || []).map(async (path) => {
+          for (const path of pathType?.subPath || []) {
             if (path.trafficType === 1) {
-              console.log(path.startId);
-              return {
+              const lastTime = await this.getLastTrain({
+                station_code: path.startID,
+                line_num: path.lane[0].subwayCode,
+                way_code: path.wayCode,
+              }).catch(() => null);
+
+              subPath.push({
                 trafficType: '지하철',
                 distance: path.distance,
                 startName: path.startName,
@@ -122,95 +113,85 @@ export class AppService {
                 stationCount: path.stationCount,
                 door: path.door,
                 startId: path.startId,
-                lastTime: await this.getLastTrain({
-                  station_code: path.startID,
-                  line_num: path.lane[0].subwayCode,
-                  way_code: path.wayCode,
-                }),
-              };
+                lastTime,
+              });
             } else if (path.trafficType === 3) {
-              return {
+              subPath.push({
                 trafficType: '도보',
                 distance: path.distance,
                 sectionTime: path.sectionTime,
-              };
+              });
             }
-          }),
-        );
+          }
 
-        return {
-          type: '지하철',
-          totalTime: pathType?.info?.totalTime,
-          totalDistance: pathType?.info?.totalDistance,
-          payment: pathType?.info?.payment,
-          firstStartStation: pathType?.info?.firstStartStation,
-          lastEndStation: pathType?.info?.lastEndStation,
-          subPath: subPath.filter(Boolean), // 빈 객체를 필터링
-        };
-      } else if (pathType.pathType === 2) {
-        return {
-          type: '버스',
-          totalTime: pathType?.info?.totalTime,
-          totalDistance: pathType?.info?.totalDistance,
-          payment: pathType?.info?.payment,
-          firstStartStation: pathType?.info?.firstStartStation,
-          lastEndStation: pathType?.info?.lastEndStation,
+          return {
+            type: '지하철',
+            totalTime: pathType?.info?.totalTime,
+            totalDistance: pathType?.info?.totalDistance,
+            payment: pathType?.info?.payment,
+            firstStartStation: pathType?.info?.firstStartStation,
+            lastEndStation: pathType?.info?.lastEndStation,
+            subPath,
+          };
+        } else if (pathType.pathType === 2 || pathType.pathType === 3) {
+          const typeLabel = pathType.pathType === 2 ? '버스' : '버스+지하철';
+          const subPath = [];
 
-          subPath: pathType?.subPath.map(async (path) => {
+          for (const path of pathType?.subPath || []) {
             if (path.trafficType === 2) {
-              return {
+              const lastTime = await this.getLastBus(path.lane[0].busNo).catch(
+                () => null,
+              );
+
+              subPath.push({
                 trafficType: '버스',
                 distance: path.distance,
                 startName: path.startName,
                 endName: path.endName,
-                lastTime: await this.getLastBus(path.lane[0].busNo),
-              };
-            } else {
-              return {
-                trafficType: '도보',
-                distance: path.distance,
-                sectionTime: path.sectionTime,
-              };
-            }
-          }),
-        };
-      } else if (pathType.pathType === 3) {
-        return {
-          type: '버스+지하철',
-          totalTime: pathType?.info?.totalTime,
-          totalDistance: pathType?.info?.totalDistance,
-          payment: pathType?.info?.payment,
-          firstStartStation: pathType?.info?.firstStartStation,
-          lastEndStation: pathType?.info?.lastEndStation,
-          subPath: pathType?.subPath.map(async (path) => {
-            if (path.trafficType === 1 || path.trafficType === 2) {
-              return {
+                lastTime,
+              });
+            } else if (path.trafficType === 1 || path.trafficType === 2) {
+              const lastTime =
+                path.trafficType === 1
+                  ? await this.getLastTrain({
+                      station_code: path.startID,
+                      line_num: path.lane[0].subwayCode,
+                      way_code: path.wayCode,
+                    }).catch(() => null)
+                  : await this.getLastBus(path.lane[0].busNo).catch(() => null);
+
+              subPath.push({
                 trafficType: path.trafficType === 1 ? '지하철' : '버스',
                 distance: path.distance,
                 startName: path.startName,
                 endName: path.endName,
-                lastTime:
-                  path.trafficType === 1
-                    ? await this.getLastTrain({
-                        station_code: path.startID,
-                        line_num: path.lane[0].subwayCode,
-                        way_code: path.wayCode,
-                      })
-                    : await this.getLastBus(path.lane[0].busNo),
-              };
+                lastTime,
+              });
             } else {
-              return {
+              subPath.push({
                 trafficType: '도보',
                 distance: path.distance,
                 sectionTime: path.sectionTime,
-              };
+              });
             }
-          }),
-        };
-      }
-    });
-    const result = await Promise.all(route);
-    return result;
+          }
+
+          return {
+            type: typeLabel,
+            totalTime: pathType?.info?.totalTime,
+            totalDistance: pathType?.info?.totalDistance,
+            payment: pathType?.info?.payment,
+            firstStartStation: pathType?.info?.firstStartStation,
+            lastEndStation: pathType?.info?.lastEndStation,
+            subPath,
+          };
+        }
+      }),
+    );
+
+    //const result = await Promise.all(route);
+    console.log(route);
+    return route;
   }
 
   /**
@@ -275,9 +256,7 @@ export class AppService {
       );
 
       const data = await res.json();
-      console.log(
-        data.SearchFirstAndLastTrainbyLineServiceNew.row[0].LAST_TIME,
-      );
+
       return data.SearchFirstAndLastTrainbyLineServiceNew.row[0].LAST_TIME;
     } catch (err) {}
   }
