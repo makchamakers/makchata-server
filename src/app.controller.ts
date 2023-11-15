@@ -8,7 +8,7 @@ import { SearchRequest } from './dto/request/search.response';
 import SearchResponse from './dto/response/search.response';
 import RouteRequest from './dto/request/route.request';
 import { LastTrainRequest } from './dto/request/lastTrain.request';
-import RouteResponse from './dto/response/route/route.response';
+//import RouteResponse from './dto/response/route/route.response';
 import RouteDetailResponse from './dto/response/route/detail/detail.response';
 
 @ApiTags('경로 데이터 가져오기')
@@ -35,7 +35,7 @@ export class AppController {
   @GetApi(() => [], {
     path: '/destination',
   })
-  getRoutes(@Query('') request: RouteRequest): Promise<RouteResponse> {
+  getRoutes(@Query('') request: RouteRequest): Promise<any> {
     return this.appService.getDestination(request);
   }
 

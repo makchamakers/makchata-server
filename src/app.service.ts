@@ -14,7 +14,6 @@ export class AppService {
     request: CurrentLocationRequest,
   ): Promise<CurrentLocationResponse> {
     try {
-      console.log(request, 'request');
       const res = await fetch(
         `https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?coords=${request.longitude},${request.latitude}&output=json&orders=addr,admcode`,
         {
@@ -28,7 +27,7 @@ export class AppService {
         },
       );
       const currentLocation = await res.json();
-      console.log(currentLocation);
+
       const mergeCurrentLocation = `${currentLocation?.results[0]?.region.area1.name} ${currentLocation?.results[0]?.region.area2.name} ${currentLocation?.results[0]?.region.area3.name} ${currentLocation?.results[0]?.region.area4.name}${currentLocation?.results[0]?.land.number1}-${currentLocation?.results[0]?.land.number2}`;
       const data = await fetch(
         `https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${mergeCurrentLocation}`,
@@ -107,10 +106,38 @@ export class AppService {
     //  }
 
     //await this.getLastTrain();
-    console.log(data.result.path);
+
     //마지막 교통수단의 시간을 구하면 된다.
     const route = data?.result?.path?.map(async (pathType) => {
       if (pathType.pathType === 1) {
+        const subPath = await Promise.all(
+          (pathType?.subPath || []).map(async (path) => {
+            if (path.trafficType === 1) {
+              console.log(path.startId);
+              return {
+                trafficType: '지하철',
+                distance: path.distance,
+                startName: path.startName,
+                endName: path.endName,
+                stationCount: path.stationCount,
+                door: path.door,
+                startId: path.startId,
+                lastTime: await this.getLastTrain({
+                  station_code: path.startID,
+                  line_num: path.lane[0].subwayCode,
+                  way_code: path.wayCode,
+                }),
+              };
+            } else if (path.trafficType === 3) {
+              return {
+                trafficType: '도보',
+                distance: path.distance,
+                sectionTime: path.sectionTime,
+              };
+            }
+          }),
+        );
+
         return {
           type: '지하철',
           totalTime: pathType?.info?.totalTime,
@@ -118,27 +145,7 @@ export class AppService {
           payment: pathType?.info?.payment,
           firstStartStation: pathType?.info?.firstStartStation,
           lastEndStation: pathType?.info?.lastEndStation,
-          quickExit: pathType?.info?.door,
-          lastTime: await this.getLastTrain({
-            station_code: pathType?.startId,
-            line_num: pathType.lane[0].path,
-            way_code: pathType?.wayCode,
-          }),
-          subPath: pathType?.subPath.map((path) => {
-            if (path.trafficType === 1 || path.trafficType === 2) {
-              return {
-                trafficType: path.trafficType === 1 ? '지하철' : '버스',
-                distance: path.distance,
-                startName: path.startName,
-                endName: path.endName,
-              };
-            } else {
-              return {
-                trafficType: '도보',
-                distance: path.distance,
-              };
-            }
-          }),
+          subPath: subPath.filter(Boolean), // 빈 객체를 필터링
         };
       } else if (pathType.pathType === 2) {
         return {
@@ -148,19 +155,21 @@ export class AppService {
           payment: pathType?.info?.payment,
           firstStartStation: pathType?.info?.firstStartStation,
           lastEndStation: pathType?.info?.lastEndStation,
-          lastTime: await this.getLastBus(759),
-          subPath: pathType?.subPath.map((path) => {
-            if (path.trafficType === 1 || path.trafficType === 2) {
+
+          subPath: pathType?.subPath.map(async (path) => {
+            if (path.trafficType === 2) {
               return {
-                trafficType: path.trafficType === 1 ? '지하철' : '버스',
+                trafficType: '버스',
                 distance: path.distance,
                 startName: path.startName,
                 endName: path.endName,
+                lastTime: await this.getLastBus(path.lane[0].busNo),
               };
             } else {
               return {
                 trafficType: '도보',
                 distance: path.distance,
+                sectionTime: path.sectionTime,
               };
             }
           }),
@@ -173,26 +182,35 @@ export class AppService {
           payment: pathType?.info?.payment,
           firstStartStation: pathType?.info?.firstStartStation,
           lastEndStation: pathType?.info?.lastEndStation,
-          subPath: pathType?.subPath.map((path) => {
+          subPath: pathType?.subPath.map(async (path) => {
             if (path.trafficType === 1 || path.trafficType === 2) {
               return {
                 trafficType: path.trafficType === 1 ? '지하철' : '버스',
                 distance: path.distance,
                 startName: path.startName,
                 endName: path.endName,
+                lastTime:
+                  path.trafficType === 1
+                    ? await this.getLastTrain({
+                        station_code: path.startID,
+                        line_num: path.lane[0].subwayCode,
+                        way_code: path.wayCode,
+                      })
+                    : await this.getLastBus(path.lane[0].busNo),
               };
             } else {
               return {
                 trafficType: '도보',
                 distance: path.distance,
+                sectionTime: path.sectionTime,
               };
             }
           }),
         };
       }
     });
-
-    return data.result.path;
+    const result = await Promise.all(route);
+    return result;
   }
 
   /**
@@ -211,7 +229,6 @@ export class AppService {
     const data = await destination.json();
 
     const newData = data.result.path[index].subPath.map((path) => {
-      console.log(path, 'lnannd');
       if (path.trafficType === 1 || path.trafficType === 2) {
         return {
           trafficType: path.trafficType === 1 ? '지하철' : '버스',
@@ -242,35 +259,37 @@ export class AppService {
 
   async getLastTrain(request: LastTrainRequest) {
     const { checkDay } = subwayUtil();
+
     //평일 1 토요일 2 공휴일/일요일 3
     let weekTag;
     await checkDay(this.configService.get<string>('OPEN_API_HOLIDAY')).then(
       (res) => (weekTag = res),
     );
-    console.log(weekTag, 'cc');
+    try {
+      const res = await fetch(
+        `http://openapi.seoul.go.kr:8088/${this.configService.get<string>(
+          'OPEN_API_LAST_TRAIN',
+        )}/json/SearchFirstAndLastTrainbyLineServiceNew/1/5/${
+          request.line_num
+        }/${request.way_code}/${weekTag}/ /${request.station_code}/`,
+      );
 
-    const res = await fetch(
-      `http://openapi.seoul.go.kr:8088/${this.configService.get<string>(
-        'OPEN_API_LAST_TRAIN',
-      )}/json/SearchFirstAndLastTrainbyLineServiceNew/1/5/${request.line_num}/${
-        request.way_code
-      }/${weekTag}/ /${request.station_code}/`,
-    );
-
-    const data = await res.json();
-
-    return data;
+      const data = await res.json();
+      console.log(
+        data.SearchFirstAndLastTrainbyLineServiceNew.row[0].LAST_TIME,
+      );
+      return data.SearchFirstAndLastTrainbyLineServiceNew.row[0].LAST_TIME;
+    } catch (err) {}
   }
 
-  private async getLastBus(busNum: number) {
+  private async getLastBus(busNum: string) {
     const res = await fetch(
       `https://api.odsay.com/v1/api/searchBusLane?lang=0&busNo=${busNum}&apiKey=${encodeURIComponent(
         this.configService.get<string>('ODSAY_KEY'),
       )}`,
     );
-
     const data = await res.json();
-    console.log(data.result.lane[0].busLastTime, '버스막차1');
+
     return data.result.lane.busLastTime;
   }
 }
