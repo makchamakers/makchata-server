@@ -45,7 +45,7 @@ export class AppController {
   getRouteDetail(
     @Query('') request: RouteRequest,
     @Param('index') index: number,
-  ): Promise<RouteDetailResponse> {
+  ): Promise<any> {
     return this.appService.getMapPathCoord(request, index);
   }
 

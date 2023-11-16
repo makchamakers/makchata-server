@@ -209,31 +209,43 @@ export class AppService {
 
     const data = await destination.json();
 
-    const newData = data.result.path[index].subPath.map((path) => {
-      if (path.trafficType === 1 || path.trafficType === 2) {
-        return {
-          trafficType: path.trafficType === 1 ? '지하철' : '버스',
-          distance: path.distance,
-          startName: path?.startName,
-          endName: path?.endName,
-          sectionTime: path?.sectionTime,
-          door: path?.door,
-          stationCount: path?.stationCount,
-          lane: path?.lane,
-          coords: path.passStopList.stations.map((coords) => {
-            return {
-              x: coords.x,
-              y: coords.y,
-            };
-          }),
-        };
-      } else {
-        return {
-          trafficType: '도보',
-          distance: path.distance,
-        };
-      }
-    });
+    const newData = await Promise.all(
+      data.result.path[index].subPath.map(async (path) => {
+        if (path.trafficType === 1 || path.trafficType === 2) {
+          console.log(path, 'path');
+          const lastTime =
+            path.trafficType === 1
+              ? await this.getLastTrain({
+                  station_code: path.startID,
+                  line_num: path.lane[0].subwayCode,
+                  way_code: path.wayCode,
+                }).catch(() => null)
+              : await this.getLastBus(path.lane[0].busNo).catch(() => null);
+          return {
+            trafficType: path.trafficType === 1 ? '지하철' : '버스',
+            distance: path.distance,
+            startName: path?.startName,
+            endName: path?.endName,
+            sectionTime: path?.sectionTime,
+            door: path?.door,
+            stationCount: path?.stationCount,
+            lane: path?.lane,
+            lastTime,
+            coords: path.passStopList.stations.map((coords) => {
+              return {
+                x: coords.x,
+                y: coords.y,
+              };
+            }),
+          };
+        } else {
+          return {
+            trafficType: '도보',
+            distance: path.distance,
+          };
+        }
+      }),
+    );
 
     return newData;
   }
