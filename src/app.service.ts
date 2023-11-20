@@ -104,17 +104,19 @@ export class AppService {
                 line_num: path.lane[0].subwayCode,
                 way_code: path.wayCode,
               }).catch(() => null);
-
+              console.log(path.sectionTime, 'sectionTime');
               subPath.push({
                 trafficType: '지하철',
                 distance: path.distance,
                 startName: path.startName,
                 endName: path.endName,
                 stationCount: path.stationCount,
+                sectionTime: path.sectionTime,
                 door: path.door,
                 startId: path.startId,
                 lastTime,
               });
+              console.log(subPath);
             } else if (path.trafficType === 3) {
               subPath.push({
                 trafficType: '도보',
@@ -148,6 +150,7 @@ export class AppService {
                 distance: path.distance,
                 startName: path.startName,
                 endName: path.endName,
+                sectionTime: path.sectionTime,
                 lastTime,
               });
             } else if (path.trafficType === 1 || path.trafficType === 2) {
@@ -165,6 +168,7 @@ export class AppService {
                 distance: path.distance,
                 startName: path.startName,
                 endName: path.endName,
+                sectionTime: path.sectionTime,
                 lastTime,
               });
             } else {
@@ -189,8 +193,6 @@ export class AppService {
       }),
     );
 
-    //const result = await Promise.all(route);
-    console.log(route);
     return route;
   }
 
@@ -212,7 +214,6 @@ export class AppService {
     const newData = await Promise.all(
       data.result.path[index].subPath.map(async (path) => {
         if (path.trafficType === 1 || path.trafficType === 2) {
-          console.log(path, 'path');
           const lastTime =
             path.trafficType === 1
               ? await this.getLastTrain({
@@ -242,6 +243,7 @@ export class AppService {
           return {
             trafficType: '도보',
             distance: path.distance,
+            sectionTime: path?.sectionTime,
           };
         }
       }),
@@ -276,7 +278,7 @@ export class AppService {
   private async getLastBus(busNum: string) {
     const res = await fetch(
       `https://api.odsay.com/v1/api/searchBusLane?lang=0&busNo=${busNum}&apiKey=${encodeURIComponent(
-        this.configService.get<string>('ODSAY_KEY'),
+        this.configService.get<string>('ODSAY_BUS_KEY'),
       )}`,
     );
     const data = await res.json();
