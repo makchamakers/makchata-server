@@ -7,14 +7,15 @@ import CurrentLocationResponse from './dto/response/current.response';
 import { SearchRequest } from './dto/request/search.response';
 import SearchResponse from './dto/response/search.response';
 import RouteRequest from './dto/request/route.request';
-import { LastTrainRequest } from './dto/request/lastTrain.request';
-//import RouteResponse from './dto/response/route/route.response';
-import RouteDetailResponse from './dto/response/route/detail/detail.response';
+import { TrafficService } from './traffic.service';
 
 @ApiTags('경로 데이터 가져오기')
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly trafficService: TrafficService,
+  ) {}
 
   @GetApi(() => [CurrentLocationResponse], {
     path: '/',
@@ -50,9 +51,9 @@ export class AppController {
   }
 
   @GetApi(() => [], {
-    path: '/destination/train',
+    path: '/taxi',
   })
-  getLastTrain(@Query('') request: LastTrainRequest): Promise<any> {
-    return this.appService.getLastTrain(request);
+  getTaxi(@Query('') request: RouteRequest): Promise<any> {
+    return this.trafficService.getTaxiPay(request);
   }
 }
