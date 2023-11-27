@@ -1,4 +1,4 @@
-import { ApiNestedField } from 'src/common/decorator/api.decorator';
+import { ApiField, ApiNestedField } from 'src/common/decorator/api.decorator';
 import TrafficResponse from './traffic.response';
 
 export default class RouteDetailResponse {
@@ -7,92 +7,120 @@ export default class RouteDetailResponse {
     type: [TrafficResponse],
     description: '경로의 종류 지하철, 버스, 도보로 나눠진 경로들의 배열,',
     nullable: false,
-    example: [
-      {
-        trafficType: '버스',
-        distance: 8588,
-        coords: [
-          {
-            x: '126.856278',
-            y: '37.521376',
-          },
-          {
-            x: '126.859282',
-            y: '37.521711',
-          },
-          {
-            x: '126.861619',
-            y: '37.521977',
-          },
-          {
-            x: '126.86328',
-            y: '37.522155',
-          },
-          {
-            x: '126.865118',
-            y: '37.524011',
-          },
-          {
-            x: '126.86551',
-            y: '37.525771',
-          },
-          {
-            x: '126.867052',
-            y: '37.52557',
-          },
-          {
-            x: '126.873175',
-            y: '37.526133',
-          },
-          {
-            x: '126.876622',
-            y: '37.528671',
-          },
-          {
-            x: '126.877533',
-            y: '37.53277',
-          },
-          {
-            x: '126.87831',
-            y: '37.53458',
-          },
-          {
-            x: '126.881268',
-            y: '37.535752',
-          },
-          {
-            x: '126.884262',
-            y: '37.536789',
-          },
-          {
-            x: '126.893239',
-            y: '37.538018',
-          },
-          {
-            x: '126.894903',
-            y: '37.537232',
-          },
-          {
-            x: '126.900803',
-            y: '37.534611',
-          },
-          {
-            x: '126.902811',
-            y: '37.541928',
-          },
-          {
-            x: '126.909967',
-            y: '37.54786',
-          },
-          {
-            x: '126.91295',
-            y: '37.548995',
-          },
-        ],
-        startName: '경서농협',
-        endName: '합정역',
-      },
-    ],
+    example: {
+      lastBoardingTime: '244449',
+      path: [
+        {
+          trafficType: '도보',
+          distance: 6,
+          sectionTime: 1,
+        },
+        {
+          trafficType: '지하철',
+          distance: 21800,
+          startName: '합정',
+          endName: '역삼',
+          sectionTime: 38,
+          door: 'null',
+          stationCount: 17,
+          lane: [
+            {
+              name: '수도권 2호선',
+              subwayCode: 2,
+              subwayCityCode: 1000,
+            },
+          ],
+          lastTime: '245830',
+          coords: [
+            {
+              x: '126.914523',
+              y: '37.549935',
+            },
+            {
+              x: '126.902682',
+              y: '37.534875',
+            },
+            {
+              x: '126.896564',
+              y: '37.525469',
+            },
+            {
+              x: '126.894803',
+              y: '37.518007',
+            },
+            {
+              x: '126.891114',
+              y: '37.508656',
+            },
+            {
+              x: '126.89489',
+              y: '37.493393',
+            },
+            {
+              x: '126.901594',
+              y: '37.485215',
+            },
+            {
+              x: '126.913346',
+              y: '37.487563',
+            },
+            {
+              x: '126.929699',
+              y: '37.484231',
+            },
+            {
+              x: '126.941586',
+              y: '37.482477',
+            },
+            {
+              x: '126.952729',
+              y: '37.481207',
+            },
+            {
+              x: '126.963428',
+              y: '37.477119',
+            },
+            {
+              x: '126.981363',
+              y: '37.476575',
+            },
+            {
+              x: '126.997667',
+              y: '37.481496',
+            },
+            {
+              x: '127.007702',
+              y: '37.491852',
+            },
+            {
+              x: '127.014395',
+              y: '37.493902',
+            },
+            {
+              x: '127.027619',
+              y: '37.497952',
+            },
+            {
+              x: '127.036377',
+              y: '37.500643',
+            },
+          ],
+        },
+        {
+          trafficType: '도보',
+          distance: 570,
+          sectionTime: 9,
+        },
+      ],
+    },
   })
-  type: TrafficResponse[];
+  path: TrafficResponse[];
+
+  @ApiField({
+    type: String,
+    description: '막차 시간',
+    nullable: true,
+    example: '244441',
+  })
+  lastBoardingTime: string;
 }

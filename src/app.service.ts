@@ -5,6 +5,8 @@ import CurrentLocationResponse from './dto/response/current.response';
 import { SearchRequest } from './dto/request/search.response';
 import RouteRequest from './dto/request/route.request';
 import { TrafficService } from './traffic.service';
+import RouteResponse from './dto/response/route/route.response';
+import RouteDetailResponse from './dto/response/route/detail/detail.response';
 
 @Injectable()
 export class AppService {
@@ -83,7 +85,7 @@ export class AppService {
     }
   }
 
-  async getDestination(request: RouteRequest) {
+  async getDestination(request: RouteRequest): Promise<RouteResponse> {
     const destination = await fetch(
       `https://api.odsay.com/v1/api/searchPubTransPathT?SX=${request.sx}&SY=${
         request.sy
@@ -93,8 +95,7 @@ export class AppService {
     );
 
     const data = await destination.json();
-
-    const route = await Promise.all(
+    const routeArray = await Promise.all(
       data?.result?.path?.map(async (pathType) => {
         let subPath;
         if (pathType.pathType === 1) {
@@ -186,6 +187,9 @@ export class AppService {
         }
       }),
     );
+    const route: RouteResponse = {
+      route: routeArray,
+    };
 
     return route;
   }
@@ -194,7 +198,10 @@ export class AppService {
    *
    * 한 path에 대한 x,y 좌표를 주면 된다. 배열로
    */
-  async getMapPathCoord(request: RouteRequest, index: number) {
+  async getMapPathCoord(
+    request: RouteRequest,
+    index: number,
+  ): Promise<RouteDetailResponse> {
     const destination = await fetch(
       `https://api.odsay.com/v1/api/searchPubTransPathT?SX=${request.sx}&SY=${
         request.sy
@@ -204,11 +211,11 @@ export class AppService {
     );
 
     const data = await destination.json();
-
+    let lastBoardingTime;
     const newData = await Promise.all(
-      data.result.path[index].subPath.map(async (path) => {
-        if (path.trafficType === 1 || path.trafficType === 2) {
-          const lastTime =
+      data.result.path[index].subPath.map(async (path, index, array) => {
+        if (index === array.length - 2) {
+          lastBoardingTime =
             path.trafficType === 1
               ? await this.trafficService
                   .getLastTrain({
@@ -229,7 +236,6 @@ export class AppService {
             door: path?.door,
             stationCount: path?.stationCount,
             lane: path?.lane,
-            lastTime,
             coords: path.passStopList.stations.map((coords) => {
               return {
                 x: coords.x,
@@ -247,6 +253,11 @@ export class AppService {
       }),
     );
 
-    return newData;
+    const type: RouteDetailResponse = {
+      path: newData,
+      lastBoardingTime,
+    };
+
+    return type;
   }
 }

@@ -20,6 +20,14 @@ export default class PathInfoResponse {
 
   @ApiField({
     type: Number,
+    description: '막차 시간 23시 56분 33초 인경우 ',
+    nullable: false,
+    example: '235633',
+  })
+  lastBoardingTime: string;
+
+  @ApiField({
+    type: Number,
     description: '총 이동 거리 단위(미터)',
     nullable: false,
     example: 4100,
@@ -56,5 +64,5 @@ export default class PathInfoResponse {
     nullable: false,
     example: '신정역',
   })
-  subPath: [SubPathResponse];
+  subPath: SubPathResponse[];
 }

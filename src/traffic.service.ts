@@ -3,6 +3,7 @@ import { subwayUtil } from './utils/subway.util';
 import { LastTrainRequest } from './dto/request/lastTrain.request';
 import { ConfigService } from '@nestjs/config';
 import RouteRequest from './dto/request/route.request';
+import TaxiResponse from './dto/response/taxi.response';
 
 @Injectable()
 export class TrafficService {
@@ -41,7 +42,7 @@ export class TrafficService {
     return data.result.lane.busLastTime;
   }
 
-  async getTaxiPay(route: RouteRequest): Promise<number> {
+  async getTaxiPay(route: RouteRequest): Promise<TaxiResponse> {
     const res = await fetch(
       `https://apis-navi.kakaomobility.com/v1/directions?origin=${route.sx},${route.sy}&destination=${route.ex},${route.ey}`,
       {
@@ -58,7 +59,7 @@ export class TrafficService {
       Array.isArray(data.routes) &&
       data.routes.length > 0
     ) {
-      return data.routes[0].summary.fare.taxi;
+      return { taxiPay: data.routes[0].summary.fare.taxi };
     } else {
       throw new Error('Invalid response format');
     }

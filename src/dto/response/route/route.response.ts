@@ -9,39 +9,35 @@ export default class RouteResponse {
     example: [
       {
         type: '지하철',
-        totalTime: 21,
-        totalDistance: 6787,
-        payment: 1400,
-        firstStartStation: '신정',
-        lastEndStation: '합정',
+        lastBoardingTime: '245830',
+        totalTime: 48,
+        totalDistance: 22375,
+        payment: 1600,
+        firstStartStation: '합정',
+        lastEndStation: '역삼',
         subPath: [
           {
             trafficType: '도보',
-            distance: 181,
-          },
-          {
-            trafficType: '지하철',
-            distance: 3500,
-            startName: '신정',
-            endName: '영등포구청',
-          },
-          {
-            trafficType: '도보',
-            distance: 0,
-          },
-          {
-            trafficType: '지하철',
-            distance: 3100,
-            startName: '영등포구청',
-            endName: '합정',
-          },
-          {
-            trafficType: '도보',
             distance: 6,
+            sectionTime: 1,
+          },
+          {
+            trafficType: '지하철',
+            distance: 21800,
+            startName: '합정',
+            endName: '역삼',
+            stationCount: 17,
+            sectionTime: 38,
+            door: 'null',
+          },
+          {
+            trafficType: '도보',
+            distance: 569,
+            sectionTime: 9,
           },
         ],
       },
     ],
   })
-  route: PathInfoResponse;
+  route: PathInfoResponse[];
 }

@@ -8,6 +8,9 @@ import { SearchRequest } from './dto/request/search.response';
 import SearchResponse from './dto/response/search.response';
 import RouteRequest from './dto/request/route.request';
 import { TrafficService } from './traffic.service';
+import RouteResponse from './dto/response/route/route.response';
+import RouteDetailResponse from './dto/response/route/detail/detail.response';
+import TaxiResponse from './dto/response/taxi.response';
 
 @ApiTags('경로 데이터 가져오기')
 @Controller()
@@ -36,24 +39,25 @@ export class AppController {
   @GetApi(() => [], {
     path: '/destination',
   })
-  getRoutes(@Query('') request: RouteRequest): Promise<any> {
+  getRoutes(@Query('') request: RouteRequest): Promise<RouteResponse> {
     return this.appService.getDestination(request);
   }
 
+  // 하나만 만드는게 비용 절감에는 좋을 것 같다...
   @GetApi(() => [], {
     path: '/destination/:index',
   })
   getRouteDetail(
     @Query('') request: RouteRequest,
     @Param('index') index: number,
-  ): Promise<any> {
+  ): Promise<RouteDetailResponse> {
     return this.appService.getMapPathCoord(request, index);
   }
 
   @GetApi(() => [], {
     path: '/taxi',
   })
-  getTaxi(@Query('') request: RouteRequest): Promise<any> {
+  getTaxi(@Query('') request: RouteRequest): Promise<TaxiResponse> {
     return this.trafficService.getTaxiPay(request);
   }
 }
