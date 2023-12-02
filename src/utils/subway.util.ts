@@ -20,8 +20,9 @@ export const subwayUtil = () => {
     const dayOfWeek = date.getDay();
     const today = `${year}${month}${day}`;
 
-    const formattingMonth = month < 10 ? `0${month}` : month;
+    const formattingMonth = month < 10 ? `0${month + 1}` : month + 1;
     const formattingKey = encodeURIComponent(key);
+    console.log(month);
     const res = await fetch(
       `http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo?solYear=${year}&solMonth=${formattingMonth}&ServiceKey=${formattingKey}`,
     );
@@ -29,11 +30,20 @@ export const subwayUtil = () => {
     const xmlData = await res.text();
     const parser = new xml2js.Parser({ explicitArray: false });
     const parsedData = await parser.parseStringPromise(xmlData);
+    console.log(parsedData);
 
     if (parsedData.response.header.resultCode === '00') {
-      const checkHoliday = parsedData.response.body.items.item;
-      for (const item of checkHoliday) {
-        if (item.locdate === today || dayOfWeek === 0) {
+      if (parsedData.response.body.items === '') {
+        if (dayOfWeek === 0) {
+          return 3;
+        } else if (dayOfWeek > 1 || dayOfWeek < 6) {
+          return 1;
+        } else if (dayOfWeek === 6) {
+          return 2;
+        }
+      } else {
+        const checkHoliday = parsedData.response.body.items.item;
+        if (checkHoliday.locdate === today || dayOfWeek === 0) {
           return 3;
         } else if (dayOfWeek > 1 || dayOfWeek < 6) {
           return 1;
