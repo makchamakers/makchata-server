@@ -95,6 +95,7 @@ export class AppService {
     );
 
     const data = await destination.json();
+    console.log(data);
     const routeArray = await Promise.all(
       data?.result?.path?.map(async (pathType) => {
         let subPath;
@@ -191,7 +192,7 @@ export class AppService {
       route: routeArray,
     };
 
-    return route;
+    return data;
   }
 
   /**

@@ -60,4 +60,11 @@ export class AppController {
   getTaxi(@Query('') request: RouteRequest): Promise<TaxiResponse> {
     return this.trafficService.getTaxiPay(request);
   }
+
+  @GetApi(() => [], {
+    path: '/bus/:busNo',
+  })
+  getBus(@Param('busNo') busNo: number): Promise<any> {
+    return this.trafficService.getLastBus(busNo);
+  }
 }
