@@ -32,8 +32,6 @@ export class TrafficService {
   }
 
   async getLastBus(busNo: number) {
-    console.log(busNo);
-
     const res = await fetch(
       `https://api.odsay.com/v1/api/searchBusLane?lang=0&busNo=${busNo}&apiKey=${encodeURIComponent(
         this.configService.get<string>('ODSAY_BUS_KEY'),

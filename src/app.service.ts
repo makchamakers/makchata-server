@@ -192,7 +192,7 @@ export class AppService {
       route: routeArray,
     };
 
-    return data;
+    return route;
   }
 
   /**
