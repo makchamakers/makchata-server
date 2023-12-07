@@ -16,7 +16,7 @@ export const findMaxBusLastTime = (busArray) => {
   }
 
   // 결과를 {busLastTime: '', busNo: ''} 형태의 객체로 반환
-  return { busLastTime: maxBus.busLastTime, busNo: maxBus.busNo };
+  return maxBus.busLastTime;
 };
 
 const compareBusLastTime = (time1, time2) => {

@@ -1,6 +1,5 @@
 import { ApiField, ApiNestedField } from 'src/common/decorator/api.decorator';
 import TrafficResponse from './traffic.response';
-import BusLastBoardingTimeResponse from './buslastBoardingTime.response';
 
 export default class RouteDetailResponse {
   //도보일 경우의 x,y 좌표를 생각해보겠습니다.
@@ -121,9 +120,9 @@ export default class RouteDetailResponse {
     type: String,
     description: '막차 시간',
     nullable: true,
-    example: '244441',
+    example: '23:42',
   })
-  lastBoardingTime: BusLastBoardingTimeResponse;
+  lastBoardingTime: string;
 
   @ApiField({
     type: Number,
