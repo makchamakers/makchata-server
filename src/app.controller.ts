@@ -62,9 +62,12 @@ export class AppController {
   }
 
   @GetApi(() => [], {
-    path: '/bus/:busNo',
+    path: '/bus',
   })
-  getBus(@Param('busNo') busNo: number): Promise<any> {
-    return this.trafficService.getLastBus(busNo);
+  getBus(
+    @Query('busNo') busNo: string,
+    @Query('cityCode') cityCode: number,
+  ): Promise<any> {
+    return this.trafficService.getLastBus(busNo, cityCode);
   }
 }

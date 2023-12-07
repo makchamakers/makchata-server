@@ -31,15 +31,21 @@ export class TrafficService {
     } catch (err) {}
   }
 
-  async getLastBus(busNo: number) {
+  async getLastBus(busNo: string, cityCode: number) {
     const res = await fetch(
-      `https://api.odsay.com/v1/api/searchBusLane?lang=0&busNo=${busNo}&apiKey=${encodeURIComponent(
+      `https://api.odsay.com/v1/api/searchBusLane?lang=0&busNo=${busNo}&CID=${cityCode}&apiKey=${encodeURIComponent(
         this.configService.get<string>('ODSAY_BUS_KEY'),
       )}`,
     );
 
     const data = await res.json();
-    return data.result;
+    const busBoadingTime = data.result.lane.map(({ busNo, busLastTime }) => {
+      return { busNo, busLastTime };
+    });
+    // if(data){
+    //   if(cityCode === data.result.totalCityList.)
+    // }
+    return busBoadingTime;
   }
 
   async getTaxiPay(route: RouteRequest): Promise<TaxiResponse> {

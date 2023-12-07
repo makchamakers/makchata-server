@@ -95,7 +95,6 @@ export class AppService {
     );
 
     const data = await destination.json();
-    console.log(data);
     const routeArray = await Promise.all(
       data?.result?.path?.map(async (pathType) => {
         let subPath;
@@ -151,7 +150,7 @@ export class AppService {
                 trafficType = '버스';
                 if (index === array.length - 2) {
                   lastBoardingTime = await this.trafficService
-                    .getLastBus(path.lane[0].busNo)
+                    .getLastBus(path.lane[0].busNo, path.lane[0].busCityCode)
                     .catch(() => null);
                 }
               } else if (path.trafficType === 1) {
@@ -231,7 +230,7 @@ export class AppService {
                   })
                   .catch(() => null)
               : await this.trafficService
-                  .getLastBus(path.lane[0].busNo)
+                  .getLastBus(path.lane[0].busNo, path.lane[0].busCityCode)
                   .catch(() => null);
           return {
             trafficType: path.trafficType === 1 ? '지하철' : '버스',
