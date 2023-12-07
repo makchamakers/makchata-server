@@ -123,4 +123,20 @@ export default class RouteDetailResponse {
     example: '244441',
   })
   lastBoardingTime: string;
+
+  @ApiField({
+    type: Number,
+    description: '총 소요 시간 (분)',
+    nullable: true,
+    example: 43,
+  })
+  totalTime: number;
+
+  @ApiField({
+    type: String,
+    description: '이동 수단',
+    nullable: true,
+    example: '1 : 지하철, 2 : 버스 , 3: 지하철 + 버스',
+  })
+  type: string;
 }

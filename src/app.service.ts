@@ -213,6 +213,11 @@ export class AppService {
 
     const data = await destination.json();
     let lastBoardingTime;
+    const totalTime = await data.result.path[index].info.totalTime;
+    const type = await data.result.path[index].pathType;
+    const trafficType =
+      type === 1 ? '지하철' : type === 2 ? '버스' : '지하철 + 버스';
+
     const newData = await Promise.all(
       data.result.path[index].subPath.map(async (path, index, array) => {
         if (index === array.length - 2) {
@@ -254,11 +259,13 @@ export class AppService {
       }),
     );
 
-    const type: RouteDetailResponse = {
+    const detail: RouteDetailResponse = {
       path: newData,
       lastBoardingTime,
+      totalTime,
+      type: trafficType,
     };
 
-    return type;
+    return detail;
   }
 }
