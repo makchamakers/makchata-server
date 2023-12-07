@@ -123,7 +123,7 @@ export default class RouteDetailResponse {
     nullable: true,
     example: '244441',
   })
-  lastBoardingTime: BusLastBoardingTimeResponse[];
+  lastBoardingTime: BusLastBoardingTimeResponse;
 
   @ApiField({
     type: Number,

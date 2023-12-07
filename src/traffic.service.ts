@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { subwayUtil } from './utils/subway.util';
+import { findMaxBusLastTime, subwayUtil } from './utils/subway.util';
 import { LastTrainRequest } from './dto/request/lastTrain.request';
 import { ConfigService } from '@nestjs/config';
 import RouteRequest from './dto/request/route.request';
@@ -39,9 +39,7 @@ export class TrafficService {
     );
 
     const data = await res.json();
-    const busBoadingTime = data.result.lane.map(({ busNo, busLastTime }) => {
-      return { busNo, busLastTime };
-    });
+    const busBoadingTime = findMaxBusLastTime(data.result.lane);
     // if(data){
     //   if(cityCode === data.result.totalCityList.)
     // }

@@ -1,5 +1,36 @@
 import * as xml2js from 'xml2js';
 
+export const findMaxBusLastTime = (busArray) => {
+  if (!busArray || busArray.length === 0) {
+    return null;
+  }
+
+  // 초기값으로 첫 번째 원소를 설정
+  let maxBus = busArray[0];
+
+  // 배열을 순회하면서 가장 큰 busLastTime을 가진 원소를 찾음
+  for (let i = 1; i < busArray.length; i++) {
+    if (compareBusLastTime(busArray[i].busLastTime, maxBus.busLastTime) > 0) {
+      maxBus = busArray[i];
+    }
+  }
+
+  // 결과를 {busLastTime: '', busNo: ''} 형태의 객체로 반환
+  return { busLastTime: maxBus.busLastTime, busNo: maxBus.busNo };
+};
+
+const compareBusLastTime = (time1, time2) => {
+  // 예를 들어, '24:20'과 같이 시간이 24시간 형식일 경우를 고려하여 처리할 수 있습니다.
+  const [hour1, minute1] = time1.split(':').map(Number);
+  const [hour2, minute2] = time2.split(':').map(Number);
+
+  if (hour1 === hour2) {
+    return minute1 - minute2;
+  }
+
+  return hour1 - hour2;
+};
+
 export const subwayUtil = () => {
   // subwayCode를 받아서 ex)2  => 02호선을 붙일 것.
   const formattingSubwayCode = (subwayCode: number) => {
