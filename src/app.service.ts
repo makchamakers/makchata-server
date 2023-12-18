@@ -46,7 +46,6 @@ export class AppService {
         },
       );
       const result = await data.json();
-      console.log(result, '현재위치');
 
       return {
         location:
@@ -99,6 +98,10 @@ export class AppService {
     );
 
     const data = await destination.json();
+
+    //출, 도착지가 700m 이내일 때
+    if (data.error) return data.error.msg;
+
     const routeArray = await Promise.all(
       data?.result?.path?.map(async (pathType) => {
         let subPath;

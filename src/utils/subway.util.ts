@@ -53,7 +53,6 @@ export const subwayUtil = () => {
 
     const formattingMonth = month < 10 ? `0${month + 1}` : month + 1;
     const formattingKey = encodeURIComponent(key);
-    console.log(month);
     const res = await fetch(
       `http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo?solYear=${year}&solMonth=${formattingMonth}&ServiceKey=${formattingKey}`,
     );
@@ -61,7 +60,6 @@ export const subwayUtil = () => {
     const xmlData = await res.text();
     const parser = new xml2js.Parser({ explicitArray: false });
     const parsedData = await parser.parseStringPromise(xmlData);
-    console.log(parsedData);
 
     if (parsedData.response.header.resultCode === '00') {
       if (parsedData.response.body.items === '') {
