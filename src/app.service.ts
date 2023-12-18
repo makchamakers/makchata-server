@@ -46,9 +46,13 @@ export class AppService {
         },
       );
       const result = await data.json();
+      console.log(result, '현재위치');
 
       return {
-        location: result?.addresses[0].roadAddress,
+        location:
+          result?.addresses[0].roadAddress === ''
+            ? result?.addresses[0].jibunAddress
+            : result?.addresses[0].roadAddress,
         x: result?.addresses[0].x,
         y: result?.addresses[0].y,
       };
